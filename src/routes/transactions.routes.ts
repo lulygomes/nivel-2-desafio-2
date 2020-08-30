@@ -23,6 +23,8 @@ transactionsRouter.post('/', async (request, response) => {
     category,
   });
 
+  delete transaction.id;
+
   return response.json(transaction);
 });
 

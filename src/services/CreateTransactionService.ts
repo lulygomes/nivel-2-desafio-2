@@ -1,7 +1,17 @@
 // import AppError from '../errors/AppError';
 
-import { getRepository } from 'typeorm';
+import { getRepository, getCustomRepository } from 'typeorm';
 import Transaction from '../models/Transaction';
+import Category from '../models/Category';
+
+import CategoryRepository from '../repositories/CategoryRepository';
+
+interface Request {
+  title: string;
+  type: 'income' | 'outcome';
+  value: number;
+  category: string;
+}
 
 class CreateTransactionService {
   public async execute({
@@ -9,14 +19,19 @@ class CreateTransactionService {
     type,
     value,
     category,
-  }: Transaction): Promise<Transaction> {
+  }: Request): Promise<Transaction | Category> {
     const transactionRepository = getRepository(Transaction);
+    const categoryRepository = getCustomRepository(CategoryRepository);
+
+    const categoryId = await categoryRepository.verifyAndCreateCategory(
+      category,
+    );
 
     const transaction = transactionRepository.create({
       title,
       type,
       value,
-      category,
+      category_id: categoryId,
     });
 
     await transactionRepository.save(transaction);
