@@ -1,10 +1,12 @@
 // import AppError from '../errors/AppError';
 
-import { getRepository, getCustomRepository } from 'typeorm';
+import { getCustomRepository } from 'typeorm';
 import Transaction from '../models/Transaction';
 import Category from '../models/Category';
 
 import CategoryRepository from '../repositories/CategoryRepository';
+import TransactionsRepository from '../repositories/TransactionsRepository';
+import AppError from '../errors/AppError';
 
 interface Request {
   title: string;
@@ -20,12 +22,18 @@ class CreateTransactionService {
     value,
     category,
   }: Request): Promise<Transaction | Category> {
-    const transactionRepository = getRepository(Transaction);
+    const transactionRepository = getCustomRepository(TransactionsRepository);
     const categoryRepository = getCustomRepository(CategoryRepository);
 
     const categoryId = await categoryRepository.verifyAndCreateCategory(
       category,
     );
+
+    const contBalance = await transactionRepository.getBalance();
+
+    if (type === 'outcome' && contBalance.total < value) {
+      throw new AppError('not Valid balance to outcome', 400);
+    }
 
     const transaction = transactionRepository.create({
       title,
