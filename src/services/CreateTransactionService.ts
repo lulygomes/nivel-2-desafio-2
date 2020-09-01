@@ -23,15 +23,15 @@ class CreateTransactionService {
     const transactionRepository = getCustomRepository(TransactionsRepository);
     const categoryRepository = getCustomRepository(CategoryRepository);
 
+    const { total } = await transactionRepository.getBalance();
+
+    if (type === 'outcome' && total < value) {
+      throw new AppError('not Valid balance to outcome', 400);
+    }
+
     const categoryId = await categoryRepository.verifyAndCreateCategory(
       category,
     );
-
-    const contBalance = await transactionRepository.getBalance();
-
-    if (type === 'outcome' && contBalance.total < value) {
-      throw new AppError('not Valid balance to outcome', 400);
-    }
 
     const transaction = transactionRepository.create({
       title,
